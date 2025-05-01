@@ -1,0 +1,109 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winery Notes</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
+
+  <style>
+    html, body {
+      height: 100%;
+      margin: 0;
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+
+    .container {
+      width: 90%;
+      max-width: 1200px;
+      text-align: center;
+      padding: 20px;
+    }
+
+    #map-container {
+      width: 100vw; /* Full width */
+      height: calc(100vh - 100px); /* Adjust height dynamically */
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .leaflet-popup-content {
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <h1>Welcome to My Map!</h1>
+</div>
+
+<div id="map-container">
+  <div id="map"></div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+
+<script>
+  // Initialize map
+  const map = L.map("map").setView([-28.73834, 151.87886], 11); // Glen Aplin default
+
+  // Add OpenStreetMap tiles
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors"
+  }).addTo(map);
+
+  // Define custom icons
+  const visitedIcon = L.icon({
+    iconUrl: 'visited.png', // Update with actual icon URL
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+
+  const wantToVisitIcon = L.icon({
+    iconUrl: 'notvisited.png', // Update with actual icon URL
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+
+  // Load data from Google Sheet
+  const sheetID = "19t_XA_fLHcr8MqA_qNfeSAySCcor2GOOZxScFAU1i4Q";
+  const sheetName = "Wineries";
+
+  fetch(`https://opensheet.elk.sh/${sheetID}/${sheetName}`)
+    .then(res => res.ok ? res.json() : Promise.reject(`HTTP Error: ${res.status}`))
+    .then(data => {
+      data.forEach(place => {
+        const lat = parseFloat(place.lat);
+        const lng = parseFloat(place.lng);
+        const status = place.status;
+        const image = place.image ? `<img src="${place.image}" width="200"><br>` : ""; // Only add image if available
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const icon = status === "visited" ? visitedIcon : wantToVisitIcon;
+
+          L.marker([lat, lng], { icon })
+            .addTo(map)
+            .bindPopup(`<strong>${place.name}</strong><br>${image}${place.description || ""}`);
+        }
+      });
+    })
+    .catch(err => {
+      console.error("Error loading markers:", err);
+      alert("Could not load marker data.");
+    });
+</script>
+
+</body>
+</html>

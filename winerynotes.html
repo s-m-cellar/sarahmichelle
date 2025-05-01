@@ -1,0 +1,173 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Winery Notes</title>
+
+  <!-- Leaflet CSS -->
+  <link rel="stylesheet" href="https://unpkg.com/leaflet@1.9.4/dist/leaflet.css" crossorigin="anonymous"/>
+
+  <style>
+    /* --- Base Layout --- */
+    body {
+      padding: 20px;
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 24px; /* Matching font size for headings */
+      text-align: center;
+      margin: 10px 0 30px;
+    }
+
+    /* --- Hamburger Menu Styles --- */
+    .menu-wrapper {
+      position: relative; /* Scrolls naturally with the page */
+      margin-bottom: 15px; /* Adds spacing below the menu */
+      z-index: 2000;
+    }
+
+    .menu-icon {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 30px;
+      cursor: pointer;
+    }
+
+    .menu-icon div {
+      height: 3px;
+      background-color: #333;
+      border-radius: 2px;
+    }
+
+    .nav-links {
+      display: none;
+      flex-direction: column;
+      background-color: white;
+      position: absolute; /* Positions dropdown relative to menu-wrapper */
+      top: 40px; /* Align below the hamburger icon */
+      left: 0; /* Directly under the hamburger icon */
+      padding: 10px;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      padding: 5px 0;
+      font-size: 14px;
+      text-align: left; /* Align menu text to the left */
+    }
+
+    .nav-links.show {
+      display: flex;
+    }
+
+    /* --- Map Container Styling --- */
+    #map-container {
+      width: 100vw; /* Full width */
+      height: calc(100vh - 100px); /* Adjust height dynamically */
+    }
+
+    #map {
+      width: 100%;
+      height: 100%;
+    }
+
+    .leaflet-popup-content {
+      font-size: 1rem;
+      line-height: 1.4;
+    }
+  </style>
+</head>
+<body>
+
+<div class="container">
+  <!-- Hamburger Menu -->
+  <div class="menu-wrapper">
+    <div class="menu-icon" onclick="toggleMenu()">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="fallensoldiers.html">Fallen Soldiers</a>
+      <a href="alltimefaves.html">All Time Faves</a>
+      <a href="winerynotes.html">Winery Notes</a>
+    </div>
+  </div>
+  <h1>Winery Notes</h1>
+</div>
+
+<div id="map-container">
+  <div id="map"></div>
+</div>
+
+<!-- Leaflet JS -->
+<script src="https://unpkg.com/leaflet@1.9.4/dist/leaflet.js" crossorigin="anonymous"></script>
+
+<script>
+  // Hamburger menu toggle function
+  function toggleMenu() {
+    document.getElementById('navLinks').classList.toggle('show');
+  }
+
+  // Initialize map
+  const map = L.map("map").setView([-28.73834, 151.87886], 11); // Glen Aplin default
+
+  // Add OpenStreetMap tiles
+  L.tileLayer("https://{s}.tile.openstreetmap.org/{z}/{x}/{y}.png", {
+    attribution: "&copy; OpenStreetMap contributors"
+  }).addTo(map);
+
+  // Define custom icons
+  const visitedIcon = L.icon({
+    iconUrl: 'visited.png', // Replace with actual icon URL
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+
+  const wantToVisitIcon = L.icon({
+    iconUrl: 'notvisited.png', // Replace with actual icon URL
+    iconSize: [32, 32],
+    iconAnchor: [16, 32],
+    popupAnchor: [0, -32]
+  });
+
+  // Load data from Google Sheet
+  const sheetID = "19t_XA_fLHcr8MqA_qNfeSAySCcor2GOOZxScFAU1i4Q";
+  const sheetName = "Wineries";
+
+  fetch(`https://opensheet.elk.sh/${sheetID}/${sheetName}`)
+    .then(res => res.ok ? res.json() : Promise.reject(`HTTP Error: ${res.status}`))
+    .then(data => {
+      data.forEach(place => {
+        const lat = parseFloat(place.lat);
+        const lng = parseFloat(place.lng);
+        const status = place.status;
+        const image = place.image ? `<img src="${place.image}" width="200"><br>` : ""; // Only add image if available
+
+        if (!isNaN(lat) && !isNaN(lng)) {
+          const icon = status === "visited" ? visitedIcon : wantToVisitIcon;
+
+          L.marker([lat, lng], { icon })
+            .addTo(map)
+            .bindPopup(`<strong>${place.name}</strong><br>${image}${place.description || ""}`);
+        }
+      });
+    })
+    .catch(err => {
+      console.error("Error loading markers:", err);
+      alert("Could not load marker data.");
+    });
+</script>
+
+</body>
+</html>

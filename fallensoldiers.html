@@ -1,0 +1,181 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>Fallen Soldiers</title>
+  <style>
+    /* --- Base Layout --- */
+    body {
+      padding: 20px;
+      font-family: 'Arial', sans-serif;
+      background-color: #f9f9f9;
+      margin: 0;
+    }
+
+    h1 {
+      font-size: 24px;
+      text-align: center;
+      margin: 10px 0 30px;
+    }
+
+    /* --- Hamburger Menu Styles --- */
+    .menu-wrapper {
+      position: relative;
+      top: 15px;
+      left: 15px;
+      z-index: 1000;
+    }
+
+    .menu-icon {
+      display: flex;
+      flex-direction: column;
+      gap: 5px;
+      width: 30px;
+      cursor: pointer;
+    }
+
+    .menu-icon div {
+      height: 3px;
+      background-color: #333;
+      border-radius: 2px;
+    }
+
+    .nav-links {
+      display: none;
+      flex-direction: column;
+      background-color: white;
+      position: fixed;
+      top: 60px;
+      left: 15px;
+      padding: 10px;
+      border: 1px solid #ccc;
+      box-shadow: 0 4px 8px rgba(0, 0, 0, 0.1);
+    }
+
+    .nav-links a {
+      text-decoration: none;
+      color: #333;
+      padding: 5px 0;
+      font-size: 14px;
+    }
+
+    .nav-links.show {
+      display: flex;
+    }
+
+    /* --- Table Styling (unchanged from your code) --- */
+    .table-container {
+      overflow-x: auto;
+      margin-bottom: 20px;
+    }
+
+    table {
+      width: 100%;
+      border-collapse: collapse;
+      border: 1px solid #ddd;
+      border-radius: 8px;
+      margin: 0 auto;
+    }
+
+    th, td {
+      padding: 6px 8px;
+      text-align: left;
+      border-bottom: 1px solid #ddd;
+      font-size: 8px;
+    }
+
+    th {
+      background-color: #f2f2f2;
+      text-transform: uppercase;
+      letter-spacing: 1px;
+    }
+
+    td {
+      background-color: #fafafa;
+    }
+
+    tr:nth-child(even) td {
+      background-color: #f9f9f9;
+    }
+
+    tr:hover td {
+      background-color: #eaeaea;
+    }
+
+    @media (max-width: 600px) {
+      th, td {
+        padding: 8px;
+        font-size: 14px;
+      }
+    }
+  </style>
+</head>
+<body>
+
+  <!-- Hamburger Menu -->
+  <div class="menu-wrapper">
+    <div class="menu-icon" onclick="toggleMenu()">
+      <div></div>
+      <div></div>
+      <div></div>
+    </div>
+    <div class="nav-links" id="navLinks">
+      <a href="index.html">Home</a>
+      <a href="fallensoldiers.html">Fallen Soldiers</a>
+      <a href="alltimefaves.html">All Time Faves</a>
+      <a href="winerynotes.html">Winery Notes</a>
+    </div>
+  </div>
+
+  <!-- Page Title -->
+  <h1>Fallen Soldiers</h1>
+
+  <!-- Wine Tables -->
+  <h2>Fallen Soldiers</h2>
+  <div class="table-container">
+    <table id="fallensoldiers-table" border="1"></table>
+  </div>
+
+   <!-- JavaScript -->
+  <script>
+    function toggleMenu() {
+      document.getElementById('navLinks').classList.toggle('show');
+    }
+
+    const apiKey = 'AIzaSyD5c4wg3Xx45ybImQgSQK-9w2spvUiLdLU';
+    const spreadsheetId = '19t_XA_fLHcr8MqA_qNfeSAySCcor2GOOZxScFAU1i4Q';
+    const ranges = [
+      { range: 'Fallen Soldiers!A:Z', tableId: 'fallensoldiers-table' },
+    ];
+
+    function fetchSheetData(range, tableId) {
+      const url = `https://sheets.googleapis.com/v4/spreadsheets/${spreadsheetId}/values/${range}?key=${apiKey}`;
+      fetch(url)
+        .then(response => response.json())
+        .then(data => {
+          const rows = data.values;
+          buildTable(rows, tableId);
+        })
+        .catch(error => {
+          console.error('Error fetching data: ', error);
+        });
+    }
+
+    function buildTable(data, elementId) {
+      const table = document.getElementById(elementId);
+      const headers = data[0] || [];
+      let html = '<tr>' + headers.map(h => `<th>${h}</th>`).join('') + '</tr>';
+      data.slice(1).forEach(row => {
+        html += '<tr>' + row.map(cell => `<td>${cell}</td>`).join('') + '</tr>';
+      });
+      table.innerHTML = html;
+    }
+
+    window.addEventListener('DOMContentLoaded', () => {
+      ranges.forEach(({ range, tableId }) => {
+        fetchSheetData(range, tableId);
+      });
+    });
+  </script>
+
+</body>
+</html>
